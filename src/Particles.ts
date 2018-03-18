@@ -26,10 +26,12 @@ class Particles{
     numofps: number;
     interval: number;
     forcecenter: vec3;
+    center: boolean;
 
     constructor(numofps: number, interval: number = 1.0){
         this.ps = new Array<Particle>();
         this.interval = interval;
+        this.center = true;
         let n = Math.pow(numofps, 1.0/3.0);
         console.log("n="+n);
         let origin = vec3.create();
@@ -80,55 +82,53 @@ class Particles{
         for(let i = 0; i < this.ps.length; i++)
         {
             //update force
-            let force = vec3.create();
-            vec3.subtract(force, this.forcecenter, this.ps[i].curpos);
-            let forcevalue = vec3.length(force);
-            if(forcevalue!=0)
+            let forcevalue = 0.0;
+            if(this.center == true)
             {
-                if(forcevalue>1.0)
+                let force = vec3.create();
+                vec3.subtract(force, this.forcecenter, this.ps[i].curpos);
+                forcevalue = vec3.length(force);
+                if(forcevalue!=0)
                 {
-                    forcevalue = 1.0 / forcevalue;
+                    // if(forcevalue>1.0)
+                    // {
+                        forcevalue = 1.0 / forcevalue;
+                    // }
+                    // else
+                    // {
+                    //     forcevalue = 1.0;
+                    // }
                 }
-                else
-                {
-                    forcevalue = 1.0;
-                }
+                // if(forcevalue>maxforce)
+                // {
+                //     forcevalue = maxforce;
+                // }
+                vec3.normalize(force, force);
+                vec3.scale(force, force, forcevalue * 25.0);
+                this.ps[i].force = force;//vec3.fromValues(0.0, 0.0, Math.sin(time) * 10.0);
+                //console.log("this.ps[i].force" + this.ps[i].force);
+                //update acceleration
+                let acceleration = vec3.create();
+                vec3.scale(acceleration, this.ps[i].force, 1 / this.ps[i].mass);
+                //console.log("acceleration" + acceleration);
+                //update velocity
+                let accelmutitime = vec3.create();
+                vec3.scale(accelmutitime, acceleration, timestep);
+                vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
+
+                //arival
+                // let arrivalvel = vec3.create();
+                // vec3.subtract(arrivalvel, this.forcecenter, this.ps[i].curpos);
+                // //wander
+                // let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
+                // vec3.normalize(randomvel, randomvel);
+                // vec3.scale(randomvel, randomvel, 1.0);
+                // vec3.add(randomvel, this.ps[i].curvel, randomvel);
+                // vec3.normalize(randomvel, randomvel);
+                // vec3.scale(randomvel, randomvel, 250.0);
+                // vec3.add(arrivalvel, randomvel, arrivalvel);
+                // this.ps[i].curvel = arrivalvel;
             }
-            // if(forcevalue>maxforce)
-            // {
-            //     forcevalue = maxforce;
-            // }
-            vec3.normalize(force, force);
-            vec3.scale(force, force, forcevalue * 50.0 + 10.0);
-            this.ps[i].force = force;//vec3.fromValues(0.0, 0.0, Math.sin(time) * 10.0);
-            //console.log("this.ps[i].force" + this.ps[i].force);
-            //update acceleration
-            let acceleration = vec3.create();
-            vec3.scale(acceleration, this.ps[i].force, 1 / this.ps[i].mass);
-            //console.log("acceleration" + acceleration);
-            //update velocity
-            let accelmutitime = vec3.create();
-            vec3.scale(accelmutitime, acceleration, timestep);
-            vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
-
-
-            //arival
-            let arrivalvel = vec3.create();
-            vec3.subtract(arrivalvel, this.forcecenter, this.ps[i].curpos);
-            //wander
-            let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
-            vec3.normalize(randomvel, randomvel);
-            vec3.scale(randomvel, randomvel, 1.0);
-            vec3.add(randomvel, this.ps[i].curvel, randomvel);
-            vec3.normalize(randomvel, randomvel);
-            vec3.scale(randomvel, randomvel, 100.0);
-
-
-            vec3.add(arrivalvel, randomvel, arrivalvel);
-            //seek
-            //vec3.normalize(arrivalvel, arrivalvel);
-            //vec3.scale(arrivalvel, arrivalvel, 10.0);
-            this.ps[i].curvel = arrivalvel;
 
 
             //console.log("this.ps[i].curvel" + this.ps[i].curvel);
@@ -147,8 +147,8 @@ class Particles{
            //use force as color
            //0.5, 0.5, 0.5		0.5, 0.5, 0.5	2.0, 1.0, 0.0	0.50, 0.20, 0.25
            let t = vec3.length(this.ps[i].curvel);
-           t = forcevalue;
-           let color = this.palette(forcevalue, vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
+           t = forcevalue * 5.0;
+           let color = this.palette(t, vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
            colors.push(color[0]);
            colors.push(color[1]);
            colors.push(color[2]);

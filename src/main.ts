@@ -13,6 +13,7 @@ import Particles from './Particles';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
+  mouserotation: false,
 };
 
 let square: Square;
@@ -20,7 +21,7 @@ let time: number = 0.0;
 let simulationTimeStep: number = 1 / 60.0;
 let particles: Particles;
 let particlenumber: number = 10000.0;
-let interval: number = 2.0;
+let interval: number = 5.0;
 
 function updatepos(particles: Particles, time: number, timestep: number) {
   let offsetsArray = new Array<number>();
@@ -65,6 +66,8 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'Load Scene');
+  gui.add(controls, 'mouserotation');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -80,7 +83,9 @@ function main() {
   loadScene();
 
   let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0 * interval;
-  const camera = new Camera(vec3.fromValues(0, 0, coord * 10.0), vec3.fromValues(coord, coord, coord));
+  const camera = new Camera(vec3.fromValues(coord, coord, coord*4.0), vec3.fromValues(coord, coord, coord));
+  // console.log("camerapos" + camera.position);
+  // console.log("cameratarget" + camera.target);
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.05, 0.05, 0.05, 1);
@@ -92,11 +97,17 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/particle-frag.glsl')),
   ]);
 
+  //camera.controls.eye = vec3.fromValues(0.0, 0.0, coord * 1000000.0);
   camera.update();
+  console.log("camerapos" + camera.position);
+  console.log("cameratarget" + camera.target);
 
   // This function will be called every frame
   function tick() {
-    camera.update();
+    if(controls.mouserotation)
+    {
+      camera.update();
+    }
     stats.begin();
     lambert.setTime(time++);
     updatepos(particles, time, simulationTimeStep);
@@ -135,73 +146,85 @@ function main() {
     camera.updateProjectionMatrix();
   }, false);
 
-  window.addEventListener('mousemove', function(event){
-    console.log("click");
+  // window.addEventListener('mousemove', function(event){
+  //   console.log("click");
+  //   var rect = canvas.getBoundingClientRect();
+  //   var x = event.clientX - rect.left;
+  //   var y = event.clientY - rect.top;
+  //   x = x / canvas.width * 2 - 1;
+  //   y = y / canvas.height * -2 + 1;
+  //   updateforcecenter(x, y);
+  //   // console.log("position x " + x + " y " + y);
+  //   // console.log("WebGL coordinate x " + x + " y " + y);
+  //   // console.log("camerapos" + camera.position);
+  //   // console.log("cameraforward" + camera.forward);
+  //   // console.log("cameratarget" + camera.target);
+
+  // }, false);
+
+  var mouseIsDown = false;
+canvas.onmousedown = function(event){
+  console.log("onmousedown");
+  //console.log("camerapos" + camera.position);
+  if(!controls.mouserotation)
+  {
     var rect = canvas.getBoundingClientRect();
     var x = event.clientX - rect.left;
     var y = event.clientY - rect.top;
     x = x / canvas.width * 2 - 1;
     y = y / canvas.height * -2 + 1;
     updateforcecenter(x, y);
-    // console.log("position x " + x + " y " + y);
-    // console.log("WebGL coordinate x " + x + " y " + y);
-    // console.log("camerapos" + camera.position);
-    // console.log("cameraforward" + camera.forward);
-    // console.log("cameratarget" + camera.target);
+    particles.center = true;
+  }
+  mouseIsDown = true;
+}
+canvas.onmouseup = function(event){
+  if(mouseIsDown){
+    if(!controls.mouserotation)
+    {
+      var rect = canvas.getBoundingClientRect();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      x = x / canvas.width * 2 - 1;
+      y = y / canvas.height * -2 + 1;
+      updateforcecenter(x, y);
+      particles.center = true;
+    }
+  }
+  console.log("onmouseup");
+  particles.center = false;
+  mouseIsDown = false;
+}
 
-  }, false);
+canvas.onmousemove = function(event){
+  if(!mouseIsDown) return;
+  if(!controls.mouserotation){
+    var rect = canvas.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+    x = x / canvas.width * 2 - 1;
+    y = y / canvas.height * -2 + 1;
+    updateforcecenter(x, y);
+    particles.center = true;
+  }
+  console.log("onmousemove");
+  return false;
+}
 
-  // window.addEventListener('touchstart', function (ev) {
-  //   var xy = mouseOffset(ev.changedTouches[0], window);
-  //   ev.preventDefault()
-  // }, false)
+function mouseClick(e: any){
+  // click action
+}
 
   window.addEventListener('touchstart', function(event){
     console.log("touchstart");
-    // var rect = canvas.getBoundingClientRect();
-    // var x = event.clientX - rect.left;
-    // var y = event.clientY - rect.top;
-    // x = x / canvas.width * 2 - 1;
-    // y = y / canvas.height * -2 + 1;
-    // updateforcecenter(x, y);
-    // console.log("position x " + x + " y " + y);
-    // console.log("WebGL coordinate x " + x + " y " + y);
-    // console.log("camerapos" + camera.position);
-    // console.log("cameraforward" + camera.forward);
-    // console.log("cameratarget" + camera.target);
-
   }, false);
 
   window.addEventListener('touchmove', function(event){
     console.log("touchmove");
-    // var rect = canvas.getBoundingClientRect();
-    // var x = event.clientX - rect.left;
-    // var y = event.clientY - rect.top;
-    // x = x / canvas.width * 2 - 1;
-    // y = y / canvas.height * -2 + 1;
-    // updateforcecenter(x, y);
-    // console.log("position x " + x + " y " + y);
-    // console.log("WebGL coordinate x " + x + " y " + y);
-    // console.log("camerapos" + camera.position);
-    // console.log("cameraforward" + camera.forward);
-    // console.log("cameratarget" + camera.target);
-
   }, false);
 
   window.addEventListener('touchend', function(event){
     console.log("touchend");
-    // var rect = canvas.getBoundingClientRect();
-    // var x = event.clientX - rect.left;
-    // var y = event.clientY - rect.top;
-    // x = x / canvas.width * 2 - 1;
-    // y = y / canvas.height * -2 + 1;
-    // updateforcecenter(x, y);
-    // console.log("position x " + x + " y " + y);
-    // console.log("WebGL coordinate x " + x + " y " + y);
-    // console.log("camerapos" + camera.position);
-    // console.log("cameraforward" + camera.forward);
-    // console.log("cameratarget" + camera.target);
-
   }, false);
 
   renderer.setSize(window.innerWidth, window.innerHeight);

@@ -15,14 +15,16 @@ class Camera {
   up: vec3 = vec3.create();
   right: vec3 = vec3.create();
   forward: vec3 = vec3.create();
+  wanttocontrol: boolean = false;
 
   constructor(position: vec3, target: vec3) {
     const canvas = <HTMLCanvasElement> document.getElementById('canvas');
 
     this.controls = CameraControls(canvas, {
-      position: position,
+      eye: position,
       center: target,
     });
+    console.log("controlseye" + this.controls.eye);
 
     vec3.add(this.target, this.position, this.direction);
     mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
