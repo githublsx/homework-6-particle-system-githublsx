@@ -8,6 +8,6 @@ out vec4 out_Col;
 
 void main()
 {
-    float dist = 1.0 - (length(fs_Pos.xyz) * 10.0);
+    float dist = 1.0 - (length(fs_Pos.xyz) * 5.0);
     out_Col = vec4(dist) * fs_Col;
 }
