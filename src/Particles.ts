@@ -29,14 +29,22 @@ class Particles{
         this.ps = new Array<Particle>();
         let n = Math.pow(numofps, 1.0/3.0);
         console.log("n="+n);
+        let origin = vec3.create();
+        let coord = n / 2.0;
+        origin = vec3.fromValues(coord, coord, coord);
         for(let i = 0; i < n; i++)
         {
             for(let j = 0; j < n; j++)
             {
                 for(let k = 0; k < n; k++)
                 {
-                    let velocity = vec3.fromValues(0.0, 0.0, 0.0);
                     let position = vec3.fromValues(i, j, k);
+                    let velocity = vec3.fromValues(Math.random(), Math.random(), Math.random());
+                    let toorigin = vec3.fromValues(coord-i, coord-j, coord-k);
+                    vec3.normalize(toorigin, toorigin);
+                    //velocity = vec3.cross(velocity, velocity, toorigin);
+                    //velocity = vec3.fromValues(0.0, 0.0, 0.0);
+
                     let color = vec4.fromValues(i/n, j/n, k/n, 1.0);
                     let force = vec3.fromValues(0.0, 0.0, 0.0);
                     let mass = 1.0;
@@ -48,10 +56,23 @@ class Particles{
         this.numofps = n * n * n;
     }
 
-    update(time: number, timestep: number){
+    palette( t: number, a: vec3, b: vec3, c: vec3, d: vec3)
+    {
+        let temp = vec3.create();
+        vec3.scale(temp, c, t);
+        vec3.add(temp, temp, d);
+        vec3.scale(temp, temp, 6.28318);
+        temp = vec3.fromValues(Math.cos(temp[0]), Math.cos(temp[1]), Math.cos(temp[2]));
+        vec3.multiply(temp, temp, b);
+        vec3.add(temp, temp, a);
+        return temp;
+    }
+
+    update(time: number, timestep: number, offsets: number[], colors: number[]){
         let origin = vec3.create();
         let coord = Math.pow(this.ps.length, 1.0/3.0) / 2.0;
         origin = vec3.fromValues(coord, coord, coord);
+        let maxforce = coord / 2.0;
         for(let i = 0; i < this.ps.length; i++)
         {
             //update force
@@ -62,12 +83,12 @@ class Particles{
             {
                 forcevalue = 1.0 / forcevalue;
             }
-            if(forcevalue>5.0)
-            {
-                forcevalue = 5.0;
-            }
+            // if(forcevalue>maxforce)
+            // {
+            //     forcevalue = maxforce;
+            // }
             vec3.normalize(force, force);
-            vec3.scale(force, force, forcevalue);
+            vec3.scale(force, force, forcevalue * 5.0);
             this.ps[i].force = force;//vec3.fromValues(0.0, 0.0, Math.sin(time) * 10.0);
             //console.log("this.ps[i].force" + this.ps[i].force);
             //update acceleration
@@ -85,6 +106,19 @@ class Particles{
             //console.log("velmutitime" + velmutitime);
             vec3.add(this.ps[i].curpos, this.ps[i].curpos, velmutitime);
            //console.log("this.ps[i].curpos" + this.ps[i].curpos);
+           //push position and color
+           offsets.push(this.ps[i].curpos[0]);
+           offsets.push(this.ps[i].curpos[1]);
+           offsets.push(this.ps[i].curpos[2]);
+           //console.log(particles.ps[i].curpos);
+       
+           //use force as color
+           //0.5, 0.5, 0.5		0.5, 0.5, 0.5	2.0, 1.0, 0.0	0.50, 0.20, 0.25
+           let color = this.palette(forcevalue, vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
+           colors.push(color[0]);
+           colors.push(color[1]);
+           colors.push(color[2]);
+           colors.push(this.ps[i].color[3]); 
         }
     }
 }

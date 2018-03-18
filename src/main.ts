@@ -19,28 +19,29 @@ let square: Square;
 let time: number = 0.0;
 let simulationTimeStep: number = 1 / 60.0;
 let particles: Particles;
-let particlenumber: number = 1000.0;
+let particlenumber: number = 10000.0;
 
-function updatepos(particles: Particles) {
-  let offsetsArray = [];
-  let colorsArray = [];
-  let n: number = particles.ps.length;
-  //console.log(particles.numofps);
-  for(let i = 0; i < n; i++) {
-    offsetsArray.push(particles.ps[i].curpos[0]);
-    offsetsArray.push(particles.ps[i].curpos[1]);
-    offsetsArray.push(particles.ps[i].curpos[2]);
-    //console.log(particles.ps[i].curpos);
+function updatepos(particles: Particles, time: number, timestep: number) {
+  let offsetsArray = new Array<number>();
+  let colorsArray = new Array<number>();
+  particles.update(time, timestep, offsetsArray, colorsArray);
+  // let n: number = particles.ps.length;
+  // //console.log(particles.numofps);
+  // for(let i = 0; i < n; i++) {
+  //   offsetsArray.push(particles.ps[i].curpos[0]);
+  //   offsetsArray.push(particles.ps[i].curpos[1]);
+  //   offsetsArray.push(particles.ps[i].curpos[2]);
+  //   //console.log(particles.ps[i].curpos);
 
-    colorsArray.push(particles.ps[i].color[0]);
-    colorsArray.push(particles.ps[i].color[1]);
-    colorsArray.push(particles.ps[i].color[2]);
-    colorsArray.push(particles.ps[i].color[3]); 
-  }
+  //   colorsArray.push(particles.ps[i].color[0]);
+  //   colorsArray.push(particles.ps[i].color[1]);
+  //   colorsArray.push(particles.ps[i].color[2]);
+  //   colorsArray.push(particles.ps[i].color[3]); 
+  // }
   let offsets: Float32Array = new Float32Array(offsetsArray);
   let colors: Float32Array = new Float32Array(colorsArray);
   square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(n); // 10x10 grid of "particles"
+  square.setNumInstances(particles.ps.length); // 10x10 grid of "particles"
 }
 
 function loadScene() {
@@ -49,7 +50,7 @@ function loadScene() {
   particles = new Particles(particlenumber);
 
   // Set up particles here. Hard-coded example data for now
-  updatepos(particles);
+  //updatepos(particles);
 }
 
 function main() {
@@ -78,7 +79,7 @@ function main() {
   loadScene();
 
   let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0;
-  const camera = new Camera(vec3.fromValues(0, 0, 10), vec3.fromValues(coord, coord, coord));
+  const camera = new Camera(vec3.fromValues(0, 0, coord * 10.0), vec3.fromValues(coord, coord, coord));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -95,8 +96,7 @@ function main() {
     camera.update();
     stats.begin();
     lambert.setTime(time++);
-    particles.update(time, simulationTimeStep);
-    updatepos(particles);
+    updatepos(particles, time, simulationTimeStep);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
     renderer.render(camera, lambert, [
