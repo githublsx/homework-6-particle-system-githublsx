@@ -6,6 +6,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import Particles from './Particles';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -16,31 +17,39 @@ const controls = {
 
 let square: Square;
 let time: number = 0.0;
+let simulationTimeStep: number = 1 / 60.0;
+let particles: Particles;
+let particlenumber: number = 1000.0;
 
-function loadScene() {
-  square = new Square();
-  square.create();
-
-  // Set up particles here. Hard-coded example data for now
+function updatepos(particles: Particles) {
   let offsetsArray = [];
   let colorsArray = [];
-  let n: number = 100.0;
+  let n: number = particles.ps.length;
+  //console.log(particles.numofps);
   for(let i = 0; i < n; i++) {
-    for(let j = 0; j < n; j++) {
-      offsetsArray.push(i);
-      offsetsArray.push(j);
-      offsetsArray.push(0);
+    offsetsArray.push(particles.ps[i].curpos[0]);
+    offsetsArray.push(particles.ps[i].curpos[1]);
+    offsetsArray.push(particles.ps[i].curpos[2]);
+    //console.log(particles.ps[i].curpos);
 
-      colorsArray.push(i / n);
-      colorsArray.push(j / n);
-      colorsArray.push(1.0);
-      colorsArray.push(1.0); // Alpha channel
-    }
+    colorsArray.push(particles.ps[i].color[0]);
+    colorsArray.push(particles.ps[i].color[1]);
+    colorsArray.push(particles.ps[i].color[2]);
+    colorsArray.push(particles.ps[i].color[3]); 
   }
   let offsets: Float32Array = new Float32Array(offsetsArray);
   let colors: Float32Array = new Float32Array(colorsArray);
   square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(n * n); // 10x10 grid of "particles"
+  square.setNumInstances(n); // 10x10 grid of "particles"
+}
+
+function loadScene() {
+  square = new Square();
+  square.create();
+  particles = new Particles(particlenumber);
+
+  // Set up particles here. Hard-coded example data for now
+  updatepos(particles);
 }
 
 function main() {
@@ -68,7 +77,8 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0;
+  const camera = new Camera(vec3.fromValues(0, 0, 10), vec3.fromValues(coord, coord, coord));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -85,6 +95,8 @@ function main() {
     camera.update();
     stats.begin();
     lambert.setTime(time++);
+    particles.update(time, simulationTimeStep);
+    updatepos(particles);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
     renderer.render(camera, lambert, [
