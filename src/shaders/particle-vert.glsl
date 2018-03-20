@@ -20,7 +20,7 @@ vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
 
 void main()
 {
-    fs_Col = mix(vs_Col, vec4(palette(sin(u_Time/1000.0), vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(2.0,1.0,0.0),vec3(0.5,0.20,0.25)), 1.0), vs_Str);
+    fs_Col = mix(vs_Col, vec4(palette(sin(u_Time/1000.0), vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(2.0,1.0,0.0),vec3(0.5,0.20,0.25)), 1.0), 0.0);
     //fs_Col = vec4(vs_Str,vs_Str,vs_Str,1.0);
     fs_Pos = vs_Pos;
 

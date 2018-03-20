@@ -41,13 +41,16 @@ let square: Square;
 let time: number = 0.0;
 let simulationTimeStep: number = 1 / 30.0;
 let particles: Particles;
-let particlenumber: number = 10000.0;
+let particlenumber: number = 9000.0;
 let interval: number = 5.0;
 let bunny = readTextFile("./src/mesh/bunny.obj");
 let sphere = readTextFile("./src/mesh/sphere.obj");
 let dragon = readTextFile("./src/mesh/dragon.obj");
 let teapot = readTextFile("./src/mesh/teapot.obj");
 let armadillo = readTextFile("./src/mesh/armadillo.obj");
+let cube = readTextFile("./src/mesh/cube.obj");
+let plane = readTextFile("./src/mesh/plane.obj");
+let tyra = readTextFile("./src/mesh/tyra.obj");
 
 function updatepos(particles: Particles, time: number, timestep: number) {
   let offsetsArray = new Array<number>();
@@ -111,7 +114,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'mouserotation');
-  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon', 'teapot', 'armadillo']);
+  gui.add(controls, 'mesh', ['center','plane','sphere','cube','bunny','dragon', 'teapot', 'armadillo', 'tyra']);
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -158,25 +161,37 @@ function main() {
       {
         particles.setobj(sphere);
       }
-      if(controls.mesh=="bunny")
+      else if(controls.mesh=="bunny")
       {
         particles.setobj(bunny);
       }
-      if(controls.mesh=="center")
+      else if(controls.mesh=="center")
       {
         particles.setobj(controls.mesh);
       }
-      if(controls.mesh=="dragon")
+      else if(controls.mesh=="dragon")
       {
         particles.setobj(dragon);
       }
-      if(controls.mesh=="teapot")
+      else if(controls.mesh=="teapot")
       {
         particles.setobj(teapot);
       }
-      if(controls.mesh=="armadillo")
+      else if(controls.mesh=="armadillo")
       {
         particles.setobj(armadillo);
+      }
+      else if(controls.mesh=="cube")
+      {
+        particles.setobj(cube);
+      }
+      else if(controls.mesh=="plane")
+      {
+        particles.setobj(plane);
+      }
+      else if(controls.mesh=="tyra")
+      {
+        particles.setobj(tyra);
       }
       lastmesh = controls.mesh;
     }
@@ -264,7 +279,7 @@ canvas.onmouseup = function(event){
     }
   }
   console.log("onmouseup");
-  particles.center = true;
+  particles.center = false;
   mouseIsDown = false;
 }
 
