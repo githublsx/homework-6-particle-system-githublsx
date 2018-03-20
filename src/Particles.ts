@@ -30,11 +30,13 @@ class Particles{
     center: boolean;
     mesh: any;
     coord: number;
+    maxforce: number;
 
     constructor(numofps: number, interval: number = 1.0, objstring: string = null){
         this.ps = new Array<Particle>();
         this.interval = interval;
         this.center = true;
+        this.maxforce = 1.0;
         if(objstring=='center')
         {
             this.mesh = 'center';
@@ -100,7 +102,7 @@ class Particles{
         return temp;
     }
 
-    update(time: number, timestep: number, offsets: number[], colors: number[]){
+    update(time: number, timestep: number, offsets: number[], colors: number[], strs: number[]){
         // let origin = vec3.create();
         // let coord = Math.pow(this.ps.length, 1.0/3.0) / 2.0 * this.interval;
         // origin = vec3.fromValues(coord, coord, coord);
@@ -133,19 +135,19 @@ class Particles{
                 forcevalue = vec3.length(force);
                 if(forcevalue!=0)
                 {
-                    // if(forcevalue>1.0)
-                    // {
+                    if(forcevalue>1.0)
+                    {
                         forcevalue = 1.0 / forcevalue;
-                    // }
-                    // else
-                    // {
-                    //     forcevalue = 1.0;
-                    // }
+                    }
+                    else
+                    {
+                        forcevalue = 1.0;
+                    }
                 }
-                // if(forcevalue>maxforce)
-                // {
-                //     forcevalue = maxforce;
-                // }
+                if(forcevalue>this.maxforce)
+                {
+                    forcevalue = this.maxforce;
+                }
                 vec3.normalize(force, force);
                 vec3.scale(force, force, forcevalue * 25.0);
                 this.ps[i].force = force;//vec3.fromValues(0.0, 0.0, Math.sin(time) * 10.0);
@@ -164,13 +166,14 @@ class Particles{
                 {
                     let arrivalvel = vec3.create();
                     vec3.subtract(arrivalvel, forcecenter, this.ps[i].curpos);
+                    vec3.scale(arrivalvel, arrivalvel, 0.05);
                     //wander
                     let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
                     vec3.normalize(randomvel, randomvel);
                     vec3.scale(randomvel, randomvel, 1.0);
                     vec3.add(randomvel, this.ps[i].curvel, randomvel);
                     vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, 15.0);
+                    vec3.scale(randomvel, randomvel, 2.0);
                     vec3.add(arrivalvel, randomvel, arrivalvel);
                     this.ps[i].curvel = arrivalvel;
                 }
@@ -194,11 +197,14 @@ class Particles{
            //0.5, 0.5, 0.5		0.5, 0.5, 0.5	2.0, 1.0, 0.0	0.50, 0.20, 0.25
            let t = vec3.length(this.ps[i].curvel);
            t = forcevalue * 5.0;
-           let color = this.palette(t, vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
+           //console.log("time" + time);
+           let color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
            colors.push(color[0]);
            colors.push(color[1]);
            colors.push(color[2]);
            colors.push(this.ps[i].color[3]); 
+
+           strs.push(vec3.length(velmutitime) * 100.0);
         }
     }
 }

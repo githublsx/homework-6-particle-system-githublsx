@@ -25,6 +25,7 @@ class ShaderProgram {
   attrNor: number;
   attrCol: number; // This time, it's an instanced rendering attribute, so each particle can have a unique color. Not per-vertex, but per-instance.
   attrTranslate: number; // Used in the vertex shader during instanced rendering to offset the vertex positions to the particle's drawn position.
+  attrStr: number;
 
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
@@ -45,6 +46,7 @@ class ShaderProgram {
 
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
+    this.attrStr = gl.getAttribLocation(this.prog, "vs_Str");
     this.attrTranslate = gl.getAttribLocation(this.prog, "vs_Translate");
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
@@ -110,6 +112,12 @@ class ShaderProgram {
       gl.vertexAttribDivisor(this.attrCol, 1); // Advance 1 index in col VBO for each drawn instance
     }
 
+    if (this.attrStr != -1 && d.bindCol()) {
+      gl.enableVertexAttribArray(this.attrStr);
+      gl.vertexAttribPointer(this.attrStr, 1, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrStr, 1); // Advance 1 index in col VBO for each drawn instance
+    }
+
     if (this.attrTranslate != -1 && d.bindTranslate()) {
       gl.enableVertexAttribArray(this.attrTranslate);
       gl.vertexAttribPointer(this.attrTranslate, 3, gl.FLOAT, false, 0, 0);
@@ -121,6 +129,7 @@ class ShaderProgram {
 
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
+    if (this.attrStr != -1) gl.disableVertexAttribArray(this.attrStr);
     if (this.attrTranslate != -1) gl.disableVertexAttribArray(this.attrTranslate);
   }
 };

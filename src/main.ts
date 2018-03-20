@@ -34,23 +34,25 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   mouserotation: false,
-  mesh: 'center',
+  mesh: 'sphere',
 };
 
 let square: Square;
 let time: number = 0.0;
-let simulationTimeStep: number = 1 / 60.0;
+let simulationTimeStep: number = 1 / 30.0;
 let particles: Particles;
 let particlenumber: number = 10000.0;
 let interval: number = 5.0;
 let bunny = readTextFile("./src/mesh/bunny.obj");
 let sphere = readTextFile("./src/mesh/sphere.obj");
 let dragon = readTextFile("./src/mesh/dragon.obj");
+let teapot = readTextFile("./src/mesh/teapot.obj");
 
 function updatepos(particles: Particles, time: number, timestep: number) {
   let offsetsArray = new Array<number>();
   let colorsArray = new Array<number>();
-  particles.update(time, timestep, offsetsArray, colorsArray);
+  let strsArray = new Array<number>();
+  particles.update(time, timestep, offsetsArray, colorsArray, strsArray);
   // let n: number = particles.ps.length;
   // //console.log(particles.numofps);
   // for(let i = 0; i < n; i++) {
@@ -66,7 +68,8 @@ function updatepos(particles: Particles, time: number, timestep: number) {
   // }
   let offsets: Float32Array = new Float32Array(offsetsArray);
   let colors: Float32Array = new Float32Array(colorsArray);
-  square.setInstanceVBOs(offsets, colors);
+  let strs: Float32Array = new Float32Array(strsArray);
+  square.setInstanceVBOs(offsets, colors, strs);
   square.setNumInstances(particles.ps.length); // 10x10 grid of "particles"
 }
 
@@ -107,7 +110,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'mouserotation');
-  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon']);
+  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon', 'teapot']);
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -166,6 +169,10 @@ function main() {
       {
         particles.setobj(dragon);
       }
+      if(controls.mesh=="teapot")
+      {
+        particles.setobj(teapot);
+      }
       lastmesh = controls.mesh;
     }
     stats.begin();
@@ -222,7 +229,7 @@ function main() {
 
   // }, false);
 
-  var mouseIsDown = false;
+var mouseIsDown = false;
 canvas.onmousedown = function(event){
   console.log("onmousedown");
   //console.log("camerapos" + camera.position);

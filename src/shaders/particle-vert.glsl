@@ -9,13 +9,19 @@ uniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads 
 in vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place
 in vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color
 in vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene
-
+in float vs_Str;
 out vec4 fs_Col;
 out vec4 fs_Pos;
 
+vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
+{
+    return a + b*cos( 6.28318*(c*t+d) );
+}
+
 void main()
 {
-    fs_Col = vs_Col;
+    fs_Col = mix(vs_Col, vec4(palette(sin(u_Time/1000.0), vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(2.0,1.0,0.0),vec3(0.5,0.20,0.25)), 1.0), vs_Str);
+    //fs_Col = vec4(vs_Str,vs_Str,vs_Str,1.0);
     fs_Pos = vs_Pos;
 
     vec3 offset = vs_Translate;

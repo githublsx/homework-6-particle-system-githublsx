@@ -7,11 +7,13 @@ abstract class Drawable {
   bufPos: WebGLBuffer;
   bufTranslate: WebGLBuffer;
   bufCol: WebGLBuffer;
+  bufStr: WebGLBuffer;
 
   idxGenerated: boolean = false;
   posGenerated: boolean = false;
   colGenerated: boolean = false;
   translateGenerated: boolean = false;
+  strGenerated: boolean = false;
 
   numInstances: number = 0; // How many instances of this Drawable the shader program should draw
 
@@ -44,6 +46,11 @@ abstract class Drawable {
     this.bufTranslate = gl.createBuffer();
   }
 
+  generateStr() {
+    this.strGenerated = true;
+    this.bufStr = gl.createBuffer();
+  }
+
   bindIdx(): boolean {
     if (this.idxGenerated) {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -70,6 +77,13 @@ abstract class Drawable {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTranslate);
     }
     return this.translateGenerated;
+  }
+
+  bingStr(): boolean {
+    if (this.strGenerated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufStr);
+    }
+    return this.strGenerated;
   }
 
   elemCount(): number {
