@@ -47,6 +47,7 @@ let bunny = readTextFile("./src/mesh/bunny.obj");
 let sphere = readTextFile("./src/mesh/sphere.obj");
 let dragon = readTextFile("./src/mesh/dragon.obj");
 let teapot = readTextFile("./src/mesh/teapot.obj");
+let armadillo = readTextFile("./src/mesh/armadillo.obj");
 
 function updatepos(particles: Particles, time: number, timestep: number) {
   let offsetsArray = new Array<number>();
@@ -110,7 +111,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'mouserotation');
-  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon', 'teapot']);
+  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon', 'teapot', 'armadillo']);
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -172,6 +173,10 @@ function main() {
       if(controls.mesh=="teapot")
       {
         particles.setobj(teapot);
+      }
+      if(controls.mesh=="armadillo")
+      {
+        particles.setobj(armadillo);
       }
       lastmesh = controls.mesh;
     }

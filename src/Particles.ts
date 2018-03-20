@@ -173,7 +173,7 @@ class Particles{
                     vec3.scale(randomvel, randomvel, 1.0);
                     vec3.add(randomvel, this.ps[i].curvel, randomvel);
                     vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, 2.0);
+                    vec3.scale(randomvel, randomvel, Math.max(vec3.length(arrivalvel) / 0.05, 4.0));
                     vec3.add(arrivalvel, randomvel, arrivalvel);
                     this.ps[i].curvel = arrivalvel;
                 }
