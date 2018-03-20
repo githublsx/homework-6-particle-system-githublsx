@@ -8,12 +8,33 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Particles from './Particles';
 
+function readTextFile(file: string): string
+{
+    var allTest = "";
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                allTest = rawFile.responseText;
+                return allTest;
+            }
+        }
+    }
+    rawFile.send(null);
+    return allTest;
+}
+
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   mouserotation: false,
+  mesh: 'center',
 };
 
 let square: Square;
@@ -22,6 +43,9 @@ let simulationTimeStep: number = 1 / 60.0;
 let particles: Particles;
 let particlenumber: number = 10000.0;
 let interval: number = 5.0;
+let bunny = readTextFile("./src/mesh/bunny.obj");
+let sphere = readTextFile("./src/mesh/sphere.obj");
+let dragon = readTextFile("./src/mesh/dragon.obj");
 
 function updatepos(particles: Particles, time: number, timestep: number) {
   let offsetsArray = new Array<number>();
@@ -49,8 +73,23 @@ function updatepos(particles: Particles, time: number, timestep: number) {
 function loadScene() {
   square = new Square();
   square.create();
-  particles = new Particles(particlenumber, interval);
-
+  if(controls.mesh=="sphere")
+  {
+    particles = new Particles(particlenumber, interval, sphere);
+  }
+  if(controls.mesh=="bunny")
+  {
+    particles = new Particles(particlenumber, interval, bunny);
+  }
+  if(controls.mesh=="dragon")
+  {
+    particles = new Particles(particlenumber, interval, dragon);
+  }
+  if(controls.mesh=="center")
+  {
+    particles = new Particles(particlenumber, interval, 'center');
+  }
+  //particles = new Particles(particlenumber, interval, 'center');
   // Set up particles here. Hard-coded example data for now
   //updatepos(particles);
 }
@@ -68,7 +107,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'mouserotation');
-
+  gui.add(controls, 'mesh', ['center','sphere','bunny','dragon']);
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -83,7 +122,7 @@ function main() {
   loadScene();
 
   let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0 * interval;
-  const camera = new Camera(vec3.fromValues(coord, coord, coord*4.0), vec3.fromValues(coord, coord, coord));
+  const camera = new Camera(vec3.fromValues(0.0, 0.0, coord*2.5), vec3.fromValues(0.0, 0.0, 0.0));
   // console.log("camerapos" + camera.position);
   // console.log("cameratarget" + camera.target);
 
@@ -101,12 +140,33 @@ function main() {
   camera.update();
   console.log("camerapos" + camera.position);
   console.log("cameratarget" + camera.target);
+  let lastmesh = controls.mesh;
 
   // This function will be called every frame
   function tick() {
     if(controls.mouserotation)
     {
       camera.update();
+    }
+    if(lastmesh!=controls.mesh)
+    {
+      if(controls.mesh=="sphere")
+      {
+        particles.setobj(sphere);
+      }
+      if(controls.mesh=="bunny")
+      {
+        particles.setobj(bunny);
+      }
+      if(controls.mesh=="center")
+      {
+        particles.setobj(controls.mesh);
+      }
+      if(controls.mesh=="dragon")
+      {
+        particles.setobj(dragon);
+      }
+      lastmesh = controls.mesh;
     }
     stats.begin();
     lambert.setTime(time++);
@@ -192,7 +252,7 @@ canvas.onmouseup = function(event){
     }
   }
   console.log("onmouseup");
-  particles.center = false;
+  particles.center = true;
   mouseIsDown = false;
 }
 
