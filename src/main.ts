@@ -35,6 +35,8 @@ const controls = {
   'Load Scene': loadScene, // A function pointer, essentially
   mouserotation: false,
   mesh: 'sphere',
+  radius1: 0.01,
+  radius2: 0.5,
 };
 
 let square: Square;
@@ -115,6 +117,8 @@ function main() {
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'mouserotation');
   gui.add(controls, 'mesh', ['center','plane','sphere','cube','bunny','dragon', 'teapot', 'armadillo', 'tyra']);
+  gui.add(controls, 'radius1', 0, 0.10);
+  gui.add(controls, 'radius2', 0, 1.0);
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -129,6 +133,7 @@ function main() {
   loadScene();
 
   let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0 * interval;
+  console.log("coord" + coord);
   const camera = new Camera(vec3.fromValues(0.0, 0.0, coord*2.5), vec3.fromValues(0.0, 0.0, 0.0));
   // console.log("camerapos" + camera.position);
   // console.log("cameratarget" + camera.target);
@@ -151,6 +156,14 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    if(controls.radius1 * coord!=particles.radius)
+    {
+      particles.radius = controls.radius1 * coord;
+    }
+    if(controls.radius2 * coord!=particles.radius2)
+    {
+      particles.radius2 = controls.radius2 * coord;
+    }
     if(controls.mouserotation)
     {
       camera.update();
