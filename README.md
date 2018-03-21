@@ -15,13 +15,13 @@
 **Goal:** to make physics-based procedural animation of particles and to practice using OpenGL's instanced rendering system.
 
 ## Particle collection
-I wrote a particles class to support a collection of particles that move over time and interact with various forces in the environment. At minimum, each particle will track position, velocity, and acceleration, and update position value from within `main.ts`'s `tick()` function. I use Euler integration method here.
+I wrote a particles class to support a collection of particles that move over time and interact with various forces in the environment. At minimum, each particle will track position, velocity, and acceleration, and update position value from within `main.ts`'s `tick()` function. There are 9000 particles here.
 
 ## Procedural coloration and shaping of particles
 The particles' colors are determined in some procedural manner. It's based on the force. The particle coloration scheme is based on IQ's palettes page [here](http://iquilezles.org/www/articles/palettes/palettes.htm) so that the particle collection is coherently colored.
 
 ## Interactive forces
-User can click on the scene to attract and repel particles from the cursor. I place a 3D point in the scene by add NDC coordinate with the up and right vector on the center point of lookat camera, from which particles can flee or move towards).
+User can click on the scene to attract and repel particles from the cursor. I place a 3D point in the scene by add NDC coordinate with the up and right vector on the center point of lookat camera, from which particles can flee or move towards). User can press left button of mouse to attract, and press right button of mouse to repel particles.
 
 ## Mesh surface attraction (20 points)
 User have the option of selecting a mesh from a drop-down menu in the GUI and let particles become attracted to points on the surface of the mesh. First, I try just having each vertex on the mesh attract one unique particle in your collection. Then, for extra credit, I generated random points on the surfaces of the mesh faces that will attract rest of the particles. The method is to warping a 2D point with X, Y values in the range [0, 1) to the barycentric coordinates (u, v) of any arbitrary triangle. I used the method [here](https://adamswaab.wordpress.com/2009/12/11/random-point-in-a-triangle-barycentric-coordinates/).
@@ -48,6 +48,10 @@ I use dat.GUI to make lots of aspects of the demo an interactive variable, inclu
 ![](img/particle3.gif)
 
 ![](img/particle4.gif)
+
+## Extra credit
+
+I generated random points on the surfaces of the mesh faces that will attract the particles. The method is to warping a 2D point with X, Y values in the range [0, 1) to the barycentric coordinates (u, v) of any arbitrary triangle. I used the method [here](https://adamswaab.wordpress.com/2009/12/11/random-point-in-a-triangle-barycentric-coordinates/).
 
 ## Resources
 
