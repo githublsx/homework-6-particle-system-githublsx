@@ -123,7 +123,7 @@ function main() {
   gui.add(controls, 'mesh', ['null','center','plane','sphere','cube','bunny','dragon', 'teapot', 'armadillo', 'tyra']);
   gui.add(controls, 'radius1', 0, 0.10);
   gui.add(controls, 'radius2', 0, 5.0);
-  gui.add(controls, 'palettes', 0, 10).step(1);
+  gui.add(controls, 'palettes', 0, 8).step(1);
   gui.add(controls, 'reversepalette').listen();
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
