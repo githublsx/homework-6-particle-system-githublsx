@@ -37,6 +37,7 @@ When user try to attract or repel particles from the cursor, Particles will have
 
 I use dat.GUI to make lots of aspects of the demo an interactive variable, including:
 
+* change: Make it true to change the mesh to attract particles.
 * cameracontrol: Make it true to control the camera. Make it false to attract or repel with your cursor.
 * camerarotation: Make it true to rotate the camera.
 * mesh: Select different meshes to attract particles.

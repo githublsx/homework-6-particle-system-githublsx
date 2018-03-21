@@ -3345,6 +3345,7 @@ const controls = {
     radius2: 1.0,
     palettes: 0,
     reversepalette: false,
+    change: true,
 };
 let square;
 let time = 0.0;
@@ -3413,9 +3414,10 @@ function main() {
     // Add controls to the gui
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
     //gui.add(controls, 'Load Scene');
+    gui.add(controls, 'change');
     gui.add(controls, 'cameracontrol').listen();
     gui.add(controls, 'camerarotation').listen();
-    gui.add(controls, 'mesh', ['null', 'center', 'plane', 'sphere', 'cube', 'bunny', 'dragon', 'teapot', 'armadillo', 'tyra']);
+    gui.add(controls, 'mesh', ['null', 'center', 'plane', 'sphere', 'cube', 'bunny', 'dragon', 'teapot', 'armadillo', 'tyra']).listen();
     gui.add(controls, 'radius1', 0, 0.10);
     gui.add(controls, 'radius2', 0, 5.0);
     gui.add(controls, 'palettes', 0, 8).step(1);
@@ -3459,8 +3461,21 @@ function main() {
     let lastpalettes = controls.palettes;
     let rotatetime = time;
     let lastreversepalette = controls.reversepalette;
+    let changetime = 0;
+    let id = 3;
+    let meshlist = ['null', 'center', 'plane', 'sphere', 'cube', 'bunny', 'dragon', 'teapot', 'armadillo', 'tyra'];
     // This function will be called every frame
     function tick() {
+        if (controls.change) {
+            changetime++;
+            //console.log("changetime" + changetime);
+            if (changetime > 400) {
+                id++;
+                id = id % meshlist.length;
+                controls.mesh = meshlist[id];
+                changetime = 0;
+            }
+        }
         //reverse
         if (lastreversepalette != controls.reversepalette) {
             particles.reverse = controls.reversepalette;
