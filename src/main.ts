@@ -1,4 +1,4 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec4, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -33,10 +33,13 @@ function readTextFile(file: string): string
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  mouserotation: false,
+  cameracontrol: false,
+  camerarotation: true,
   mesh: 'sphere',
   radius1: 0.01,
-  radius2: 0.5,
+  radius2: 1.0,
+  palettes: 0,
+  reversepalette: false,
 };
 
 let square: Square;
@@ -114,11 +117,14 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'Load Scene');
-  gui.add(controls, 'mouserotation');
-  gui.add(controls, 'mesh', ['center','plane','sphere','cube','bunny','dragon', 'teapot', 'armadillo', 'tyra']);
+  //gui.add(controls, 'Load Scene');
+  gui.add(controls, 'cameracontrol').listen();
+  gui.add(controls, 'camerarotation').listen();
+  gui.add(controls, 'mesh', ['null','center','plane','sphere','cube','bunny','dragon', 'teapot', 'armadillo', 'tyra']);
   gui.add(controls, 'radius1', 0, 0.10);
-  gui.add(controls, 'radius2', 0, 1.0);
+  gui.add(controls, 'radius2', 0, 5.0);
+  gui.add(controls, 'palettes', 0, 10).step(1);
+  gui.add(controls, 'reversepalette').listen();
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -135,6 +141,9 @@ function main() {
   let coord = Math.pow(particlenumber, 1.0/3.0) / 2.0 * interval;
   console.log("coord" + coord);
   const camera = new Camera(vec3.fromValues(0.0, 0.0, coord*2.5), vec3.fromValues(0.0, 0.0, 0.0));
+  camera.controls.rotateSpeed = 0.0;
+  camera.controls.translateSpeed = 0.0;
+  camera.controls.zoomSpeed = 0.0;
   // console.log("camerapos" + camera.position);
   // console.log("cameratarget" + camera.target);
 
@@ -153,9 +162,95 @@ function main() {
   console.log("camerapos" + camera.position);
   console.log("cameratarget" + camera.target);
   let lastmesh = controls.mesh;
+  let lastmousecontrol = controls.cameracontrol;
+  let lastcamerarotation = controls.camerarotation;
+  let lasteye = vec3.clone(camera.controls.eye);
+  let lastup = vec3.clone(camera.controls.up);
+  let lastpalettes = controls.palettes;
+  let rotatetime = time;
+  let lastreversepalette = controls.reversepalette;
 
   // This function will be called every frame
   function tick() {
+    //reverse
+    if(lastreversepalette != controls.reversepalette)
+    {
+      particles.reverse = controls.reversepalette;
+      lastreversepalette = controls.reversepalette;
+    }
+    //palettes
+    if(lastpalettes!=controls.palettes)
+    {
+      particles.palettes = controls.palettes;
+      lastpalettes = controls.palettes;
+    }
+    //camera control
+    if(controls.cameracontrol!=lastmousecontrol)
+    {
+      if(controls.cameracontrol)
+      {
+        controls.camerarotation = false;
+        camera.controls.rotateSpeed = 1.0;
+        camera.controls.translateSpeed = 0.0;
+        camera.controls.zoomSpeed = 1.0;
+        lastmousecontrol = controls.cameracontrol;
+        lasteye = vec3.clone(camera.controls.eye);
+        lastup = vec3.clone(camera.controls.up);
+        rotatetime = 0;
+      }
+      else
+      {
+        camera.controls.rotateSpeed = 0.0;
+        camera.controls.translateSpeed = 0.0;
+        camera.controls.zoomSpeed = 0.0;
+        lastmousecontrol = controls.cameracontrol;
+        lasteye = vec3.clone(camera.controls.eye);
+        lastup = vec3.clone(camera.controls.up);
+        rotatetime = 0;
+      }
+    }
+    //rotate camera
+
+    // if(lastcamerarotation!=controls.camerarotation)
+    // {//set lasteye
+    //   if(!controls.camerarotation)
+    //   {
+    //     lasteye = vec3.clone(camera.controls.eye);
+    //   }
+    //   lastcamerarotation = controls.camerarotation;
+    // }
+
+    if(controls.camerarotation)
+    {
+      controls.cameracontrol = false;
+      let rotationmat = mat4.create();
+      mat4.fromRotation(rotationmat, rotatetime++/100.0, lastup);
+      //mat4.fromYRotation(rotationmat, rotatetime++/100.0);
+      var eye = vec3.create();
+      vec3.transformMat4(eye, lasteye, rotationmat);
+      // console.log("lasteye" + lasteye);
+      var center = vec3.fromValues(0.0, 0.0, 0.0);
+      camera.controls.lookAt(eye, center, lastup);
+      camera.update();
+      //console.log("rotatetime" + rotatetime);
+    }
+
+    // else if(lastcamerarotation!=controls.camerarotation)
+    // {
+    //   if(!controls.camerarotation)
+    //   {
+    //     lasteye = vec3.clone(camera.controls.eye);
+    //     lastup = vec3.clone(camera.controls.up);
+    //   }
+    //   else
+    //   {
+    //     lasteye = vec3.clone(camera.controls.eye);
+    //     lastup = vec3.clone(camera.controls.up);
+    //   }
+    //   lastcamerarotation = controls.camerarotation;
+    // }
+
+
     if(controls.radius1 * coord!=particles.radius)
     {
       particles.radius = controls.radius1 * coord;
@@ -164,9 +259,13 @@ function main() {
     {
       particles.radius2 = controls.radius2 * coord;
     }
-    if(controls.mouserotation)
+    if(controls.cameracontrol)
     {
       camera.update();
+      lasteye = vec3.clone(camera.controls.eye);
+      lastup = vec3.clone(camera.controls.up);
+      rotatetime = 0;
+      //console.log("updatelasteye");
     }
     if(lastmesh!=controls.mesh)
     {
@@ -205,6 +304,10 @@ function main() {
       else if(controls.mesh=="tyra")
       {
         particles.setobj(tyra);
+      }
+      else if(controls.mesh=="null")
+      {
+        particles.setobj(null);
       }
       lastmesh = controls.mesh;
     }
@@ -264,9 +367,9 @@ function main() {
 
 var mouseIsDown = false;
 canvas.onmousedown = function(event){
-  console.log("onmousedown");
+  // console.log("onmousedown");
   //console.log("camerapos" + camera.position);
-  if(!controls.mouserotation)
+  if(!controls.cameracontrol)
   {
     var rect = canvas.getBoundingClientRect();
     var x = event.clientX - rect.left;
@@ -275,12 +378,22 @@ canvas.onmousedown = function(event){
     y = y / canvas.height * -2 + 1;
     updateforcecenter(x, y);
     particles.center = true;
+    if(event.button == 0)
+    {
+      // console.log("left");
+      particles.attract = true;
+    }
+    if(event.button == 2)
+    {
+      // console.log("right");
+      particles.attract = false;
+    }
   }
   mouseIsDown = true;
 }
 canvas.onmouseup = function(event){
   if(mouseIsDown){
-    if(!controls.mouserotation)
+    if(!controls.cameracontrol)
     {
       var rect = canvas.getBoundingClientRect();
       var x = event.clientX - rect.left;
@@ -289,16 +402,24 @@ canvas.onmouseup = function(event){
       y = y / canvas.height * -2 + 1;
       updateforcecenter(x, y);
       particles.center = true;
+      // if(event.button == 0)
+      // {
+      //   console.log("left");
+      // }
+      // if(event.button == 2)
+      // {
+      //   console.log("right");
+      // }
     }
   }
-  console.log("onmouseup");
+  // console.log("onmouseup");
   particles.center = false;
   mouseIsDown = false;
 }
 
 canvas.onmousemove = function(event){
   if(!mouseIsDown) return;
-  if(!controls.mouserotation){
+  if(!controls.cameracontrol){
     var rect = canvas.getBoundingClientRect();
     var x = event.clientX - rect.left;
     var y = event.clientY - rect.top;
@@ -306,8 +427,16 @@ canvas.onmousemove = function(event){
     y = y / canvas.height * -2 + 1;
     updateforcecenter(x, y);
     particles.center = true;
+    // if(event.button == 0)
+    // {
+    //   console.log("left");
+    // }
+    // if(event.button == 2)
+    // {
+    //   console.log("right");
+    // }
   }
-  console.log("onmousemove");
+  // console.log("onmousemove");
   return false;
 }
 

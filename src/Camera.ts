@@ -24,7 +24,7 @@ class Camera {
       eye: position,
       center: target,
     });
-    console.log("controlseye" + this.controls.eye);
+    //console.log("controlseye" + this.controls.eye);
 
     vec3.add(this.target, this.position, this.direction);
     mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);

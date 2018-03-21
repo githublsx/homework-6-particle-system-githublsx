@@ -34,13 +34,18 @@ class Particles{
     indices: number[];
     radius: number;
     radius2: number;
+    attract: boolean;
+    palettes: number; 
+    reverse: boolean;
 
-    constructor(numofps: number, interval: number = 1.0, objstring: string = null, radius: number = 0.01, radius2: number = 25.0){
+    constructor(numofps: number, interval: number = 1.0, objstring: string = null, radius: number = 0.01, radius2: number = 25.0, palettes: number = 0){
         this.ps = new Array<Particle>();
         this.interval = interval;
         this.center = false;
         this.maxforce = 1.0;
-        
+        this.attract = false;
+        this.palettes = palettes;
+        this.reverse = false;
 
         let n = Math.pow(numofps, 1.0/3.0);
         console.log("n="+n);
@@ -80,7 +85,11 @@ class Particles{
 
     setobj(objstring: string = null)
     {
-        if(objstring=='center')
+        if(objstring == null)
+        {
+            this.mesh = null;
+        }
+        else if(objstring=='center')
         {
             this.mesh = 'center';
         }
@@ -88,12 +97,15 @@ class Particles{
         {
             this.mesh = new OBJLOADER.Mesh(objstring);
             let verticeslength = this.mesh.vertices.length/3.0;
+            //console.log("verticeslength" + verticeslength);
             let indiceslength = this.mesh.indices.length/3.0;
             this.indices = new Array<number>();
             for(let i = 0;  i < this.ps.length;  i++)
             {
+                
                 if(i>=verticeslength)
                 {
+                    //console.log("i>verticeslength");
                     this.indices.push(Math.floor(Math.random() * indiceslength));
                     let r = Math.random();
                     let s = Math.random();
@@ -177,28 +189,32 @@ class Particles{
                 
             }
 
-            //update force
             let forcevalue = 0.0;
             let force = vec3.create();
-            vec3.subtract(force, forcecenter, this.ps[i].curpos);
-            forcevalue = vec3.length(force);
-            if(forcevalue!=0)
+            if(this.mesh!=null)
             {
-                if(forcevalue>1.0)
+                //update force
+                vec3.subtract(force, forcecenter, this.ps[i].curpos);
+                forcevalue = vec3.length(force);
+                if(forcevalue!=0)
                 {
-                    forcevalue = 1.0 / forcevalue;
+                    if(forcevalue>1.0)
+                    {
+                        forcevalue = 1.0 / forcevalue;
+                    }
+                    else
+                    {
+                        forcevalue = 1.0;
+                    }
                 }
-                else
+                if(forcevalue>this.maxforce)
                 {
-                    forcevalue = 1.0;
+                    forcevalue = this.maxforce;
                 }
+                vec3.normalize(force, force);
+                vec3.scale(force, force, forcevalue * 25.0);
             }
-            if(forcevalue>this.maxforce)
-            {
-                forcevalue = this.maxforce;
-            }
-            vec3.normalize(force, force);
-            vec3.scale(force, force, forcevalue * 25.0);
+
 
 
             //ifmouseattraction
@@ -245,85 +261,123 @@ class Particles{
             vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
 
             //arival
-            if(this.mesh!='center')
+            if(this.mesh!=null)
             {
-                let arrivalvel = vec3.create();
-                vec3.subtract(arrivalvel, forcecenter, this.ps[i].curpos);
-                if(this.center==true)
+                if(this.mesh!='center')
                 {
-                    let dist = vec3.length(arrivalvel);
-                    if(dist<this.radius)
-                    {
-                        forcecenter = this.forcecenter;
-                    }
-                    arrivalvel = vec3.create();
+                    let arrivalvel = vec3.create();
                     vec3.subtract(arrivalvel, forcecenter, this.ps[i].curpos);
-                    vec3.scale(arrivalvel, arrivalvel, 1.5);
-
-                    // let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
-                    // vec3.normalize(randomvel, randomvel);
-                    // vec3.scale(randomvel, randomvel, 1.0);
-                    // vec3.add(randomvel, this.ps[i].curvel, randomvel);
-                    // vec3.normalize(randomvel, randomvel);
-                    // vec3.scale(randomvel, randomvel, Math.max(vec3.length(arrivalvel) / 1.5, 1.0));
-                    // vec3.add(arrivalvel, randomvel, arrivalvel);
-
-                    this.ps[i].curvel = arrivalvel;
-                }
-                else
-                {
-                    vec3.scale(arrivalvel, arrivalvel, 0.05);
-                    //wander
-                    let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
-                    vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, 1.0);
-                    vec3.add(randomvel, this.ps[i].curvel, randomvel);
-                    vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, Math.max(vec3.length(arrivalvel) / 0.05, 3.0));
-                    vec3.add(arrivalvel, randomvel, arrivalvel);
-                    this.ps[i].curvel = arrivalvel;
+                    if(this.center==true)
+                    {
+                        let dist = vec3.length(arrivalvel);
+                        if(dist<this.radius)
+                        {
+                            forcecenter = this.forcecenter;
+                        }
+                        arrivalvel = vec3.create();
+                        vec3.subtract(arrivalvel, forcecenter, this.ps[i].curpos);
+                        vec3.scale(arrivalvel, arrivalvel, 1.5);
+    
+                        // let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
+                        // vec3.normalize(randomvel, randomvel);
+                        // vec3.scale(randomvel, randomvel, 1.0);
+                        // vec3.add(randomvel, this.ps[i].curvel, randomvel);
+                        // vec3.normalize(randomvel, randomvel);
+                        // vec3.scale(randomvel, randomvel, Math.max(vec3.length(arrivalvel) / 1.5, 1.0));
+                        // vec3.add(arrivalvel, randomvel, arrivalvel);
+    
+                        this.ps[i].curvel = arrivalvel;
+                    }
+                    else
+                    {
+                        vec3.scale(arrivalvel, arrivalvel, 0.05);
+                        //wander
+                        let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
+                        vec3.normalize(randomvel, randomvel);
+                        vec3.scale(randomvel, randomvel, 1.0);
+                        vec3.add(randomvel, this.ps[i].curvel, randomvel);
+                        vec3.normalize(randomvel, randomvel);
+                        vec3.scale(randomvel, randomvel, Math.max(vec3.length(arrivalvel) / 0.05, 3.0));
+                        vec3.add(arrivalvel, randomvel, arrivalvel);
+                        this.ps[i].curvel = arrivalvel;
+                    }
                 }
             }
+
 
             //u
             if(this.center==true)
             {
                 let force3 = vec3.create();
-                vec3.subtract(force3, this.forcecenter, this.ps[i].curpos);
-                //vec3.subtract(force3, this.ps[i].curpos, this.forcecenter);
-                let dist = vec3.length(force3);
-                if(dist<this.radius * this.radius2)
+                let finalradius = this.radius * this.radius2;
+                if(this.attract)
                 {
-                    vec3.normalize(force3, force3);
+                    vec3.subtract(force3, this.forcecenter, this.ps[i].curpos);
+                }
+                else
+                {
+                    vec3.subtract(force3, this.ps[i].curpos, this.forcecenter);
+                }
+                let dist = vec3.length(force3);
+                if(dist<finalradius)
+                {
                     if(dist!=0)
                     {
-                        // if(dist>1)
-                        // {
+                        if(dist>1)
+                        {
                             dist = 1 / dist;
+                        }
+                        else
+                        {
+                            dist = 1.0;
+                        }
+                        
+                    }
+                    vec3.normalize(force3, force3);
+                    if(this.mesh!='center' && this.mesh!=null)
+                    {
+                        // if(dist = 1.0)
+                        // {
+                        //     vec3.scale(force3, force3, dist * 10.0);
                         // }
                         // else
                         // {
-                        //     dist = 1.0;
+                            vec3.scale(force3, force3, dist * 10000.0);
                         // }
-                        
-                    }
-                    vec3.scale(force3, force3, dist * 10000.0);
-                    //update acceleration
-                    let acceleration = vec3.create();
-                    vec3.scale(acceleration, force3, 1 / this.ps[i].mass);
-                    //console.log("acceleration" + acceleration);
-                    //update velocity
-                    let accelmutitime = vec3.create();
-                    vec3.scale(accelmutitime, acceleration, timestep);
-                    vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
+                        //update acceleration
+                        let acceleration = vec3.create();
+                        vec3.scale(acceleration, force3, 1 / this.ps[i].mass);
+                        //console.log("acceleration" + acceleration);
+                        //update velocity
+                        let accelmutitime = vec3.create();
+                        vec3.scale(accelmutitime, acceleration, timestep);
+                        vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
 
-                    let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
-                    vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, 1.0);
-                    vec3.add(randomvel, this.ps[i].curvel, randomvel);
-                    vec3.normalize(randomvel, randomvel);
-                    vec3.scale(randomvel, randomvel, Math.max(vec3.length(this.ps[i].curvel), 10.0));
-                    vec3.add(this.ps[i].curvel, randomvel, this.ps[i].curvel);
+                        let randomvel = vec3.fromValues((Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0, (Math.random()-0.5)*2.0);
+                        vec3.normalize(randomvel, randomvel);
+                        vec3.scale(randomvel, randomvel, 1.0);
+                        vec3.add(randomvel, this.ps[i].curvel, randomvel);
+                        vec3.normalize(randomvel, randomvel);
+                        vec3.scale(randomvel, randomvel, Math.max(vec3.length(this.ps[i].curvel), 10.0));
+                        vec3.add(this.ps[i].curvel, randomvel, this.ps[i].curvel);
+                    }
+                    else
+                    {
+                        vec3.scale(force3, force3, dist * 25.0);
+                        //update acceleration
+                        let acceleration = vec3.create();
+                        vec3.scale(acceleration, force3, 1 / this.ps[i].mass);
+                        //console.log("acceleration" + acceleration);
+                        //update velocity
+                        let accelmutitime = vec3.create();
+                        vec3.scale(accelmutitime, acceleration, timestep);
+                        vec3.add(this.ps[i].curvel, this.ps[i].curvel, accelmutitime);
+                    }
+
+                    // if(dist = 1.0)
+                    // {
+                    //     vec3.scale(this.ps[i].curvel, this.ps[i].curvel, 0.1);
+                    // }
                 }
             }
 
@@ -341,7 +395,43 @@ class Particles{
            //0.5, 0.5, 0.5		0.5, 0.5, 0.5	2.0, 1.0, 0.0	0.50, 0.20, 0.25
            let t = vec3.length(this.ps[i].curvel);
            t = (forcevalue + forcevalue2) * 5.0;
-           let color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
+           if(this.reverse)
+           {
+               t = -t;
+           }
+           let color = vec3.fromValues(1.0, 1.0, 1.0);
+           if(this.palettes == 0)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 1.0), vec3.fromValues(0.50, 0.50, 0.25));
+           }
+           else if(this.palettes == 1)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(2.0, 1.0, 0.0), vec3.fromValues(0.50, 0.20, 0.25));
+           }
+           else if(this.palettes == 2)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.8,0.5,0.4), vec3.fromValues(0.2,0.4,0.2), vec3.fromValues(2.0,1.0,1.0), vec3.fromValues(0.0,0.25,0.25));
+           }
+           else if(this.palettes == 3)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(1.0,0.7,0.4), vec3.fromValues(0.0,0.15,0.20));
+           }
+           else if(this.palettes == 4)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(1.0,1.0,0.5), vec3.fromValues(0.8,0.90,0.30));
+           }
+           else if(this.palettes == 5)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(1.0,1.0,1.0), vec3.fromValues(0.3,0.20,0.20));
+           }
+           else if(this.palettes == 6)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(1.0,1.0,1.0), vec3.fromValues(0.0,0.10,0.20));
+           }
+           else if(this.palettes == 7)
+           {
+                color = this.palette(Math.sin(t), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(0.5, 0.5, 0.5), vec3.fromValues(1.0,1.0,1.0), vec3.fromValues(0.0,0.33,0.67));
+           }
            colors.push(color[0]);
            colors.push(color[1]);
            colors.push(color[2]);
