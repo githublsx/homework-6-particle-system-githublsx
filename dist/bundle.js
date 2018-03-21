@@ -3337,7 +3337,6 @@ function readTextFile(file) {
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-    tesselations: 5,
     'Load Scene': loadScene,
     cameracontrol: false,
     camerarotation: true,
