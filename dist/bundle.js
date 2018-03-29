@@ -3420,7 +3420,7 @@ function main() {
     gui.add(controls, 'mesh', ['null', 'center', 'plane', 'sphere', 'cube', 'bunny', 'dragon', 'teapot', 'armadillo', 'tyra']).listen();
     gui.add(controls, 'radius1', 0, 0.10);
     gui.add(controls, 'radius2', 0, 5.0);
-    gui.add(controls, 'palettes', 0, 8).step(1);
+    gui.add(controls, 'palettes', 0, 8).step(1).listen();
     gui.add(controls, 'reversepalette').listen();
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
@@ -3470,9 +3470,17 @@ function main() {
             changetime++;
             //console.log("changetime" + changetime);
             if (changetime > 400) {
-                id++;
-                id = id % meshlist.length;
+                let id2 = Math.floor(Math.random() * meshlist.length);
+                while (id == id2) {
+                    id2 = Math.floor(Math.random() * meshlist.length);
+                }
+                id = id2;
                 controls.mesh = meshlist[id];
+                let palettes2 = Math.floor(Math.random() * 8);
+                while (controls.palettes == palettes2) {
+                    palettes2 = Math.floor(Math.random() * 8);
+                }
+                controls.palettes = palettes2;
                 changetime = 0;
             }
         }
